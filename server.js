@@ -5,16 +5,32 @@ const cors = require("cors");
 const helmet = require("helmet");
 const path = require("path");
 const morgan = require("morgan");
+const passport = require("passport");
+const { Strategy } = require("passport-google-oauth20");
 require("dotenv").config();
 
 const PORT = 6002;
+const AUTH_URL = "/auth/google/callback";
 const config = {
   CLIENT_ID: process.env.CLIENT_ID,
   CLIENT_SECRET: process.env.CLIENT_SECRET,
 };
+const AUTH_OPTIONS = {
+  callbackURL: AUTH_URL,
+  clientID: config.CLIENT_ID,
+  clientSecret: config.CLIENT_SECRET,
+};
+
+const verifyCallback = (accessToken, refreshToken, profile, done) => {
+  console.log("Google profile", profile);
+  done(null, profile);
+};
+
+passport.use(new Strategy(AUTH_OPTIONS, verifyCallback));
 
 const app = express();
 app.use(helmet());
+app.use(passport.initialize());
 app.use(
   cors({
     origin: "http://localhost:6002",
@@ -42,15 +58,32 @@ const server = https.createServer(
   app
 );
 
-app.get("/auth/google", (req, res) => {});
+app.get(
+  AUTH_URL,
+  passport.authenticate("google", {
+    failureRedirect: "/failure",
+    successRedirect: "/",
+    session: false,
+  }),
+  (req, res) => {
+    console.log("Google called us back");
+  }
+);
 
-app.get("/auth/google/callback", (req, res) => {});
+app.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["email"],
+  })
+);
 
 app.get("/auth/logout", (req, res) => {});
 
-app.get("/secret", checkLoggedIn, (req, res) => {
-  return res.send("The secret value is 42!");
-});
+app.get("/failure", (req, res) => res.send("Failed to log in"));
+
+app.get("/secret", checkLoggedIn, (req, res) =>
+  res.send("The secret value is 42!")
+);
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
