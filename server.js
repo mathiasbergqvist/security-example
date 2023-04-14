@@ -5,7 +5,13 @@ const cors = require("cors");
 const helmet = require("helmet");
 const path = require("path");
 const morgan = require("morgan");
+require("dotenv").config();
+
 const PORT = 6002;
+const config = {
+  CLIENT_ID: process.env.CLIENT_ID,
+  CLIENT_SECRET: process.env.CLIENT_SECRET,
+};
 
 const app = express();
 app.use(helmet());
@@ -16,7 +22,6 @@ app.use(
   })
 );
 app.use(morgan("combined")); //Use "dev" for dev output
-
 app.use(express.json());
 
 const checkLoggedIn = (req, res, next) => {
