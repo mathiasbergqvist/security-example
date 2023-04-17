@@ -31,6 +31,16 @@ const verifyCallback = (accessToken, refreshToken, profile, done) => {
 
 passport.use(new Strategy(AUTH_OPTIONS, verifyCallback));
 
+// Save the session to the cookie
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+// Read the session from the cookie
+passport.deserializeUser((id, done) => {
+  done(null, id);
+});
+
 const app = express();
 app.use(helmet());
 app.use(
@@ -41,12 +51,14 @@ app.use(
   })
 );
 app.use(passport.initialize());
+app.use(passport.session());
 app.use(
   cors({
     origin: "http://localhost:6002",
     optionsSuccessStatus: 200,
   })
 );
+
 app.use(morgan("combined")); //Use "dev" for dev output
 app.use(express.json());
 
@@ -73,7 +85,6 @@ app.get(
   passport.authenticate("google", {
     failureRedirect: "/failure",
     successRedirect: "/",
-    session: false,
   }),
   (req, res) => {
     console.log("Google called us back");
