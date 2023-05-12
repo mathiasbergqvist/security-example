@@ -67,7 +67,7 @@ app.use(express.json());
 
 const checkLoggedIn = (req, res, next) => {
   console.log("currentUser", req.user); // Set by passport
-  const isLoggedIn = req.isAuthenticated() && req.user; // isAuthenticated from passport
+  const isLoggedIn = req.isAuthenticated() && req.user; // isAuthenticated from passport  
   if (!isLoggedIn) {
     return res.status(401).json({
       error: "You must log in",
@@ -102,7 +102,10 @@ app.get(
   })
 );
 
-app.get("/auth/logout", (req, res) => {});
+app.get("/auth/logout", (req, res) => {
+  req.logout(); // Removes req.user and clears any logged in session
+  return res.redirect('/');
+});
 
 app.get("/failure", (req, res) => res.send("Failed to log in"));
 
