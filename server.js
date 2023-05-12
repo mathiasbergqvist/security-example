@@ -38,6 +38,9 @@ passport.serializeUser((user, done) => {
 
 // Read the session from the cookie
 passport.deserializeUser((id, done) => {
+  // User.findById(id).then((user) => {
+  //   done(null, user);
+  // }); // req.user
   done(null, id);
 });
 
@@ -63,7 +66,8 @@ app.use(morgan("combined")); //Use "dev" for dev output
 app.use(express.json());
 
 const checkLoggedIn = (req, res, next) => {
-  const isLoggedIn = true; // TODO
+  console.log("currentUser", req.user); // Set by passport
+  const isLoggedIn = req.isAuthenticated() && req.user; // isAuthenticated from passport
   if (!isLoggedIn) {
     return res.status(401).json({
       error: "You must log in",
